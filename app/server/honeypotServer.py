@@ -12,14 +12,33 @@ class honeyServer(paramiko.ServerInterface):
         self.event = threading.Event()
         self.client_ip = client_ip
 
-    def checkChannelRequest(self, kind):
-        if kind == 'selection':
+    def check_auth_password(self, username, password):
+        logging.info(f"[AUTH] IP: {self.client_ip} | Username: {username} | Password: {password}")
+
+        # Set a user list
+        userList = [
+            "root", "admin", "webadmin"
+        ]
+
+        # Set a password list
+        passwordList = [
+            "toor", "root", "password",
+            "webadmin", "admin", "webmaster",
+            "maintenance"
+        ]
+
+        # Only grant access if password has been 'cracked'
+        if username in userList and password in passwordList:
+            logging.info(f"[AUTH] IP: {self.client_ip} | Session opened!")
+            return paramiko.AUTH_SUCCESSFUL
+        else:
+            return paramiko.AUTH_FAILED
+
+    def check_channel_request(self, kind, chanid):
+        if kind == 'session':
             return paramiko.OPEN_SUCCEEDED
         return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
-    
-    def check_auth_password(self, username, password):
-        # logging.info(f"[AUTH] Username: {username} | Password: {password}")
-        logging.info(f"[AUTH] IP: {self.client_ip} | Username: {username} | Password: {password}")
-        
-        # *never* accept a connection, always fail.
-        return paramiko.AUTH_FAILED
+
+    def check_channel_shell_request(self, channel):
+        self.event.set()
+        return True
