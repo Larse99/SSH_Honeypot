@@ -29,7 +29,7 @@ class SSHServer:
 ========== Powered by Root4all ==========
                                         
 System info:
-Hostname····: SRV-WEB04.root4all.de
+Hostname····: SRV-WEB04.cloud.root4all.de
 Distro······: Ubuntu 18.04.1 LTS
 Kernel······: Linux 4.15
 Uptime······: up 6 weeks, 2 days, 1 hour, 31 minutes
@@ -51,6 +51,8 @@ Disk usage:
             while True:
                 command = ''
                 while not command.endswith('\n'):
+
+                    # Check if client gives a disconnect signal
                     data = channel.recv(1024)
                     if not data:
                         logging.info(f"[SESSION] IP: {server.client_ip} | Client disconnected.")
@@ -58,17 +60,20 @@ Disk usage:
                     command += data.decode('utf-8')
 
                 command = command.strip()
-                if command == '':
-                    continue
 
+                # List of available commands
                 if command in ['exit', 'logout', 'quit']:
                     channel.send("logout\n")
                     logging.info(f"[SESSION] IP: {server.client_ip} | Session ended by user.")
                     break
                 elif command == "ls":
-                    channel.send("Documents  Downloads  Music  Pictures\n")
+                    channel.send("Webdata my.cnf reset_password.sh\n")
                 elif command.startswith("wget "):
                     channel.send("Resolving... done.\n")
+                elif command == "whoami":
+                    channel.send("root\n")
+                elif command.startswith("uname"):
+                    channel.send("Linux SRV-WEB04.cloud.root4all.de 4.15-generic #65-Ubuntu SMP PREEMPT_DYNAMIC Mon May 19 17:15:03 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux")
                 else:
                     channel.send(f"bash: {command}: command not found\n")
 

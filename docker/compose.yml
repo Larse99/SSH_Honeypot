@@ -1,0 +1,53 @@
+services:
+  ssh_honeypot:
+    container_name: honeypot
+    image: ssh_honeypot
+    ports:
+      - "2222:2222"
+    volumes:
+      - honeypot-logs:/app
+    restart: unless-stopped
+
+  promtail:
+    container_name: promtail
+    image: grafana/promtail:latest
+    volumes:
+      - honeypot-logs:/app/logs:ro
+      - ./config/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+  loki:
+    container_name: loki
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+        #      - ./config/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    restart: unless-stopped
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+volumes:
+  honeypot-logs:
+  loki-data:
+  grafana-data:
+
