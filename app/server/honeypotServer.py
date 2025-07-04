@@ -6,6 +6,10 @@
 import threading
 import paramiko
 import logging
+from server.geoLocator import geoLocator
+
+# Initialize instance
+geo = geoLocator()
 
 class honeyServer(paramiko.ServerInterface):
     def __init__(self, client_ip):
@@ -13,7 +17,10 @@ class honeyServer(paramiko.ServerInterface):
         self.client_ip = client_ip
 
     def check_auth_password(self, username, password):
-        logging.info(f"[AUTH] IP: {self.client_ip} | Username: {username} | Password: {password}")
+        # Get the country of IP
+        country = geo.getCountryName(self.client_ip)
+
+        logging.info(f"[AUTH] IP: {self.client_ip} | Country: {country} | Username: {username} | Password: {password}")
 
         # Set a user list
         userList = [
@@ -29,7 +36,7 @@ class honeyServer(paramiko.ServerInterface):
 
         # Only grant access if password has been 'cracked'
         if username in userList and password in passwordList:
-            logging.info(f"[AUTH] IP: {self.client_ip} | Session opened!")
+            logging.info(f"[AUTH] IP: {self.client_ip} | Country: {country} | Session opened!")
             return paramiko.AUTH_SUCCESSFUL
         else:
             return paramiko.AUTH_FAILED

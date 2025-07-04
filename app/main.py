@@ -13,7 +13,7 @@ from server.SSHServer import SSHServer
 logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
 
 logging.basicConfig(
-    filename='honeypot.log',
+    filename='logs/honeypot.log',
     level=logging.INFO,
     force=True,
     format='%(asctime)s - %(levelname)s - %(message)s'

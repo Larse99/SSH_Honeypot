@@ -5,7 +5,7 @@ services:
     ports:
       - "2222:2222"
     volumes:
-      - honeypot-logs:/app
+      - honeypot-logs:/app/logs
     restart: unless-stopped
 
   promtail:
@@ -27,7 +27,6 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki-data:/loki
-        #      - ./config/loki-config.yaml:/etc/loki/local-config.yaml:ro
     restart: unless-stopped
 
   grafana:
@@ -50,4 +49,3 @@ volumes:
   honeypot-logs:
   loki-data:
   grafana-data:
-
