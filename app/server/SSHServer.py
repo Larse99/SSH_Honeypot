@@ -13,23 +13,44 @@ from server.honeypotServer import honeyServer
 # Generate a SSH host key
 HOST_KEY = paramiko.RSAKey.generate(2048)
 
+# Helper function to read a PROXY header
+def read_proxy_header(client):
+    # Read firsst bytes, with timeout.
+    client.settimeout(1.0)
+    try:
+        data = client.recv(108, socket.MSG_PEEK)  # MSG_PEEK 'peeks' at the content, to see if there is a PROXY header
+    except socket.timeout:
+        data = b''
+
+    if data.startswith(b"PROXY "):
+        # If header starts with PROXY, read the whole PROXY header.
+        header = b""
+        while not header.endswith(b"\r\n"):
+            chunk = client.recv(1)
+            if not chunk:
+                break
+            header += chunk
+        return header.decode()
+    else:
+        return None
+
 class SSHServer:
     def __init__(self, bindIp="0.0.0.0", bindPort=2222):
         self.bindIp     = bindIp
         self.bindPort   = bindPort
 
     def fakeShell(self, channel, server):
-    
+
         try:
             channel.send(f"""
- _____             _   _  _          _ _ 
+ _____             _   _  _          _ _
 |  __ \           | | | || |   /\   | | |
 | |__) |___   ___ | |_| || |_ /  \  | | |
 |  _  // _ \ / _ \| __|__   _/ /\ \ | | |
 | | \ \ (_) | (_) | |_   | |/ ____ \| | |
 |_|  \_\___/ \___/ \__|  |_/_/    \_\_|_|
 ========== Powered by Root4all ==========
-                                        
+
 System info:
 Hostname····: SRV-WEB04.cloud.root4all.de
 Distro······: Ubuntu 18.04.1 LTS
@@ -139,7 +160,7 @@ Disk usage:
                         channel.send("Sorry, try again.\n")
                     else:
                         channel.send("System has not been booted with systemd as init system (PID 1). Can't operate.\n")
-                        channel.send("Failed to connect to bus: Host is down\n") 
+                        channel.send("Failed to connect to bus: Host is down\n")
                 else:
                     channel.send(f"bash: {command}: command not found\n")
 
@@ -159,10 +180,27 @@ Disk usage:
                 pass
 
     def handleConnection(self, client, addr):
+        # addr[0] is just the regular IP. 
         client_ip = addr[0]
+
+        # Get IP from PROXY header
+        # Basically, we will always use the regular IP. Except for if there is a PROXY header, then we will read the IP from the header.
+        # This has the advantage of a automatic fallback, in case there is no PROXY header.
+        proxy_header = read_proxy_header(client)
+        if proxy_header:
+            # If Proxy header exists, parse the whole thing
+            parts = proxy_header.strip().split()
+            if len(parts) >= 6:
+                # This is the Client IP (third item in the list). 
+                # If there is a PROXY header, we will replace client_ip with the IP from the list
+                client_ip = parts[2] 
+            else:
+                logging.warning(f"[WARN] Invalid PROXY header: {proxy_header}")
+
         transport = paramiko.Transport(client)
         transport.add_server_key(HOST_KEY)
 
+        # Pass the client IP to the honeyServer
         server = honeyServer(client_ip)
 
         try:
