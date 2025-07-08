@@ -42,8 +42,8 @@ class geoLocator:
             return self.geoCache[ip]
         
         try:
-            response = requests.get(f'https://geolocation-db.com/json/{ip}').json()
-            countryName = response.get('country_code')
+            response = requests.get(f'http://ip-api.com/json/{ip}').json()
+            countryName = response.get('country')
             self.geoCache[ip] = countryName
             self._saveCache()
             self._reloadCache()
