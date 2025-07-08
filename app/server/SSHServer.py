@@ -6,12 +6,15 @@
 import socket
 import threading
 import paramiko
-import logging
 import time
 from server.honeypotServer import honeyServer
+from server.logHandler import logHandler
 
 # Generate a SSH host key
 HOST_KEY = paramiko.RSAKey.generate(2048)
+
+# Initialize instances
+log = logHandler().getLogger()
 
 # Helper function to read a PROXY header
 def read_proxy_header(client):
@@ -78,7 +81,7 @@ Disk usage:
                     # Check if client gives a disconnect signal
                     data = channel.recv(1024)
                     if not data:
-                        logging.info(f"[SESSION] IP: {server.client_ip} | Client disconnected.")
+                        log.info(f"[SESSION] IP: {server.client_ip} | Client disconnected.")
                         return
                     command += data.decode('utf-8')
 
@@ -87,9 +90,10 @@ Disk usage:
                 # List of available/fake commands - this is a mess. Need to do this another way in a new version
                 if command in ['exit', 'logout', 'quit']:
                     channel.send("logout\n")
-                    logging.info(f"[SESSION] IP: {server.client_ip} | Session ended by user.")
+                    # logging.info(f"[SESSION] IP: {server.client_ip} | Session ended by user.")
+                    log.info(f"[SESSION] IP: {server.client_ip} | Session ended by user.")
                     break
-                elif command == "ls":
+                elif command.startswith("ls"):
                     channel.send("total 180K\ndrwx------ 10 root root 4.0K Jun 27 14:13 .\ndrwxr-xr-x 19 root root 4.0K May  2 17:23 ..\n-rw-r--r--  1 root root   62 Feb  9 09:14 .bash_aliases\n-rw-------  1 root root  72K Jul  2 21:03 .bash_history\n-rw-r--r--  1 root root 1.7K Jun 27 14:13 .bashrc\n-rw-r--r--  1 root root 1.7K Jun  4 18:07 .bashrc.bak\ndrwxr-xr-x  5 root root 4.0K Nov 17  2024 .cache\ndrwx------  4 root root 4.0K Jan 26 20:00 .config\ndrwxr-xr-x  3 root root 4.0K Dec 15  2024 .dotnet\n-rw-r--r--  1 root root   31 Apr 12 15:30 .forward\n-rw-r--r--  1 root root  144 Nov 18  2024 .gitconfig\n-rw-------  1 root root   38 Jun 15 00:01 .lesshst\n-rw-r--r--  1 root root  161 Jul  9  2019 .profile\n-rw-------  1 root root   23 May  7 23:36 .python_history\n-rw-------  1 root root 1.0K Aug  2  2024 .rnd\ndrwx------  2 root root 4.0K Jun 27 14:14 .ssh\ndrwxr-xr-x  3 root root 4.0K Feb  5 21:28 .venv\ndrwxr-xr-x  2 root root 4.0K Dec 15  2024 .vim\n-rw-------  1 root root  22K Jun 15 00:00 .viminfo\ndrwxr-xr-x  5 root root 4.0K May 12 21:13 .vscode-server\n-rw-r--r--  1 root root  350 May 12 21:13 .wget-hsts\ndrwxr-xr-x  3 root root 4.0K May  6 21:13 Development\n")
                 elif command.startswith("wget "):
                     channel.send("Resolving... done.\n")
@@ -166,13 +170,13 @@ Disk usage:
 
                 # We only want to log if a command is entered. Otherwise the logfile will be enormous.
                 if command:
-                    logging.info(f"[SHELL] IP: {server.client_ip} | Command: {command}")
+                    log.info(f"[SHELL] IP: {server.client_ip} | Command: {command}")
 
                 # Always return a prompt.
                 channel.send("root@SRV-WEB04:~# ")
 
         except Exception as e:
-            logging.error(f"[ERROR] Fake shell error for {server.client_ip}: {e}")
+            log.exception(f"[ERROR] Fake shell error for {server.client_ip}: {e}")
         finally:
             try:
                 channel.close()
@@ -195,7 +199,7 @@ Disk usage:
                 # If there is a PROXY header, we will replace client_ip with the IP from the list
                 client_ip = parts[2] 
             else:
-                logging.warning(f"[WARN] Invalid PROXY header: {proxy_header}")
+                log.warning(f"[WARN] Invalid PROXY header: {proxy_header}")
 
         transport = paramiko.Transport(client)
         transport.add_server_key(HOST_KEY)
@@ -210,13 +214,13 @@ Disk usage:
             if channel is not None:
                 server.event.wait(10)
                 if not server.event.is_set():
-                    logging.warning(f"[WARN] IP: {client_ip} | Client never requested a shell.")
+                    log.warning(f"[WARN] IP: {client_ip} | Client never requested a shell.")
                     return
 
                 self.fakeShell(channel, server)
 
         except Exception as e:
-            logging.error(f"[ERROR] Transport error from {client_ip}: {e}")
+            log.error(f"[ERROR] Transport error from {client_ip}: {e}")
         finally:
             try:
                 transport.close()
@@ -230,8 +234,17 @@ Disk usage:
 
         print(f"[*] Listening for connections on {self.bindIp}:{self.bindPort}...")
 
+        # For logging purposes, we log when the server started.
+        log.info(f"[*] Listening for connections on {self.bindIp}:{self.bindPort}...")
+
         while True:
             client, addr = sock.accept()
+
+            # Print to console if someone connects
             print(f"[+] Connection from {addr[0]}:{addr[1]}")
+
+            # Log if someone connects
+            log.info(f"[+] Connection from {addr[0]}:{addr[1]}")
+
             t = threading.Thread(target=self.handleConnection, args=(client, addr))
             t.start()

@@ -6,18 +6,10 @@
 # Import needed classes
 from server.honeypotServer import *
 from server.SSHServer import SSHServer
+from server.logHandler import logHandler
 
-# Initializing
-
-# Set logging parameters
-logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
-
-logging.basicConfig(
-    filename='logs/honeypot.log',
-    level=logging.INFO,
-    force=True,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+# Initialize log
+log = logHandler().getLogger()
 
 if __name__ == '__main__':
     server = SSHServer(bindPort=2222)

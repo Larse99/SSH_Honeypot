@@ -128,8 +128,8 @@
       "targets": [
         {
           "direction": "backward",
-          "editorMode": "code",
-          "expr": "sum by(country) (\n  count_over_time(\n    {job=\"ssh_honeypot\"}\n    |= \"[AUTH]\"\n    |= \"Country:\"\n    | regexp \"Country: (?P<country>[^|]+)\"\n    [$__range]\n  )\n)",
+          "editorMode": "builder",
+          "expr": "sum by(country) (count_over_time({logtype=\"honeypot\"} |= `[AUTH]` |= `Country:` | regexp `Country: (?P<country>[^|]+)` [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -259,8 +259,8 @@
       "targets": [
         {
           "direction": "backward",
-          "editorMode": "code",
-          "expr": "sum by (cmd) (\n  count_over_time({job=\"ssh_honeypot\"} |= \"Command:\"\n    | regexp \"Command: (?P<cmd>\\\\w+)\"\n  [$__range])\n)",
+          "editorMode": "builder",
+          "expr": "sum by(cmd) (count_over_time({logtype=\"honeypot\"} |= `Command:` | regexp `Command: (?P<cmd>\\w+)` [$__range]))",
           "legendFormat": "",
           "queryType": "instant",
           "refId": "A"
@@ -417,8 +417,8 @@
       "targets": [
         {
           "direction": "backward",
-          "editorMode": "code",
-          "expr": "topk(10, sum by(username, password) (\n  count_over_time(\n    {job=\"ssh_honeypot\"}\n    |= \"[AUTH]\"\n    | regexp \"Username: (?P<username>\\\\S+) \\\\| Password: (?P<password>\\\\S+)\"\n    [$__range]\n  )\n))",
+          "editorMode": "builder",
+          "expr": "topk(10, sum by(username, password) (count_over_time({logtype=\"honeypot\"} |= `[AUTH]` | regexp `Username: (?P<username>\\S+) \\| Password: (?P<password>\\S+)` [$__range])))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -479,8 +479,8 @@
       "targets": [
         {
           "direction": "backward",
-          "editorMode": "code",
-          "expr": "sum by(ip) (\n  count_over_time(\n    {job=\"ssh_honeypot\"} \n    |= \"[AUTH]\" \n    |= \"Username\"\n    | regexp \"IP: (?P<ip>\\\\d+\\\\.\\\\d+\\\\.\\\\d+\\\\.\\\\d+)\\\\s+\\\\|\\\\s+Country:.*?\\\\|\\\\s+Username: (?P<username>\\\\S+)\\\\s+\\\\|\\\\s+Password: (?P<password>\\\\S+)\"\n    [$__range]\n  )\n)\n",
+          "editorMode": "builder",
+          "expr": "sum by(ip) (count_over_time({logtype=\"honeypot\"} |= `[AUTH]` |= `Username` | regexp `IP: (?P<ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+\\|\\s+Country:.*?\\|\\s+Username: (?P<username>\\S+)\\s+\\|\\s+Password: (?P<password>\\S+)` [$__range]))",
           "legendFormat": "",
           "queryType": "range",
           "refId": "A"
@@ -507,8 +507,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 24,
+        "h": 9,
+        "w": 12,
         "x": 0,
         "y": 8
       },
@@ -529,12 +529,52 @@
         {
           "direction": "backward",
           "editorMode": "builder",
-          "expr": "{job=\"ssh_honeypot\"} |= ``",
+          "expr": "{logtype=\"honeypot\"} |= ``",
           "queryType": "range",
           "refId": "A"
         }
       ],
       "title": "Raw Log",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "dedupStrategy": "none",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": false,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "12.0.2",
+      "targets": [
+        {
+          "direction": "backward",
+          "editorMode": "builder",
+          "expr": "{logtype=\"exception\"} |= ``",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Raw Exception log",
       "type": "logs"
     },
     {
@@ -601,10 +641,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 24,
+        "h": 9,
+        "w": 12,
         "x": 0,
-        "y": 16
+        "y": 17
       },
       "id": 1,
       "options": {
@@ -628,8 +668,8 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "direction": "backward",
-          "editorMode": "code",
-          "expr": "count_over_time({job=\"ssh_honeypot\"} |= \"[AUTH]\" |= \"Session opened!\" [$__range])",
+          "editorMode": "builder",
+          "expr": "count_over_time({logtype=\"honeypot\"} |= `[AUTH]` |= `Session opened!` [$__range])",
           "legendFormat": "Successful Signins",
           "queryType": "range",
           "refId": "A"
@@ -640,8 +680,8 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "direction": "backward",
-          "editorMode": "code",
-          "expr": "count_over_time({job=\"ssh_honeypot\"} |= \"[AUTH]\" != \"Session opened!\" [$__range])",
+          "editorMode": "builder",
+          "expr": "count_over_time({logtype=\"honeypot\"} |= `[AUTH]` != `Session opened!` [$__range])",
           "hide": false,
           "legendFormat": "Signins",
           "queryType": "range",
@@ -649,6 +689,137 @@
         }
       ],
       "title": "Signin Attempts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "{detected_level=\"info\", filename=\"/app/logs/honeypot.log\", job=\"ssh_honeypot\", logtype=\"honeypot\", service_name=\"ssh_honeypot\"}"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "{detected_level=\"info\", filename=\"/app/logs/honeypot.log\", job=\"ssh_honeypot\", logtype=\"honeypot\", service_name=\"ssh_honeypot\"}"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Connections"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.2",
+      "targets": [
+        {
+          "direction": "backward",
+          "editorMode": "code",
+          "expr": "count_over_time({job=\"ssh_honeypot\", logtype=\"honeypot\"} |= \"Connection from\" [$__range])",
+          "legendFormat": "",
+          "queryType": "range",
+          "refId": "A",
+          "step": ""
+        }
+      ],
+      "title": "Incoming Connections (over time)",
       "type": "timeseries"
     },
     {
@@ -713,7 +884,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 26
       },
       "id": 3,
       "options": {
@@ -733,8 +904,8 @@
       "targets": [
         {
           "direction": "backward",
-          "editorMode": "code",
-          "expr": "topk(10, sum by(cmd) (count_over_time({job=\"ssh_honeypot\"} |= `Command:` | regexp `Command: (?P<cmd>\\w+)` [$__range])))",
+          "editorMode": "builder",
+          "expr": "topk(10, sum by(cmd) (count_over_time({logtype=\"honeypot\"} |= `Command:` | regexp `Command: (?P<cmd>\\w+)` [$__range])))",
           "queryType": "range",
           "refId": "A"
         }
@@ -758,6 +929,7 @@
   "templating": {
     "list": [
       {
+        "baseFilters": [],
         "datasource": {
           "type": "loki",
           "uid": "P8E80F9AEF21F6940"
@@ -769,12 +941,12 @@
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "SSH Honeypot",
   "uid": "0ee82422-6291-40a4-9331-6cc3f491b097",
-  "version": 20
+  "version": 22
 }

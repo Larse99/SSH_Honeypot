@@ -8,7 +8,6 @@ positions:
 clients:
   - url: http://loki:3100/loki/api/v1/push
 
-
 scrape_configs:
   - job_name: ssh_honeypot
     static_configs:
@@ -16,4 +15,12 @@ scrape_configs:
           - localhost
         labels:
           job: ssh_honeypot
+          logtype: honeypot
           __path__: /app/logs/honeypot.log
+
+      - targets:
+          - localhost
+        labels:
+          job: ssh_honeypot
+          logtype: exception
+          __path__: /app/logs/exception.log
