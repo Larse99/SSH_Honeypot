@@ -11,6 +11,7 @@ from server.logHandler import logHandler
 # Initialize instances
 geo = geoLocator()
 log = logHandler().getLogger()
+
 class honeyServer(paramiko.ServerInterface):
     def __init__(self, client_ip):
         self.event = threading.Event()
