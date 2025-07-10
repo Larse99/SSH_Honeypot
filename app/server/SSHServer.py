@@ -201,6 +201,9 @@ Disk usage:
             else:
                 log.warning(f"[WARN] Invalid PROXY header: {proxy_header}")
 
+        print(f"[+] Connection from {client_ip}")
+        log.info(f"[+] Connection from {client_ip}")
+
         transport = paramiko.Transport(client)
         transport.add_server_key(HOST_KEY)
 
@@ -229,6 +232,7 @@ Disk usage:
 
     def start(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((self.bindIp, self.bindPort))
         sock.listen(100)
 
@@ -239,12 +243,6 @@ Disk usage:
 
         while True:
             client, addr = sock.accept()
-
-            # Print to console if someone connects
-            print(f"[+] Connection from {addr[0]}:{addr[1]}")
-
-            # Log if someone connects
-            log.info(f"[+] Connection from {addr[0]}:{addr[1]}")
 
             t = threading.Thread(target=self.handleConnection, args=(client, addr))
             t.start()
